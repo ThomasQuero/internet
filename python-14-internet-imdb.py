@@ -1,18 +1,29 @@
-# Vos imports ici..
+import urllib.request
+from html.parser import HTMLParser
+
 
 class IMDBParser(HTMLParser):
-    # Votre classe ici
+
     def __init__(self):
-        pass
+        super().__init__()
+        self.films = []
+        self.dans_titre = False
 
     def handle_starttag(self, tag, attrs):
-        pass
+        if tag == "h3":
+            self.dans_titre = True
 
     def handle_endtag(self, tag):
-        pass
+        if tag == "h3":
+            self.dans_titre = False
 
     def handle_data(self, data):
-        pass
+        if self.dans_titre:
+            titre = data.strip()
+
+            if titre:
+                self.films.append(titre)
+
 
 def scrap_imdb(html_data):
     """
@@ -24,15 +35,16 @@ def scrap_imdb(html_data):
     Returns:
         Liste de films
     """
-    # Votre code ici...
-    l = []
-    return l
-    
-        
+    parser = IMDBParser()
+    parser.feed(html_data)
+
+    return parser.films
+
+
 def main():
     """
     >>> with open("IMDb.html", mode='r', encoding='utf8') as f: html_data = f.read()
-    >>> movies =  scrap_imdb(html_data)
+    >>> movies = scrap_imdb(html_data)
     >>> for m in movies[:5]: print(m)
     Les évadés
     Le parrain
@@ -46,19 +58,33 @@ def main():
     Du rififi chez les hommes
     Danse avec les loups
     """
-    # Votre code ici...
-    
-    url = 'http://www.imdb.com/chart/top?ref_=nv_ch_250_4'
+
+    url = "https://www.imdb.com/chart/top?ref_=nv_ch_250_4"
+
+    firefox = (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) "
+        "Gecko/20100101 Firefox/101.0"
+    )
+
     try:
-        html_data = ""
+        req = urllib.request.Request(url)
+        req.add_header("User-Agent", firefox)
+
+        response = urllib.request.urlopen(req)
+
+        html_data = response.read().decode("utf8")  
+
     except IOError:
-        pass
-    
-    movies =  scrap_imdb(html_data)
-    
-    # print reversed list of movies
-    
+        print("Erreur lors de la récupération de la page IMDb")
+        return None
+
+    movies = scrap_imdb(html_data)
+
+    for movie in reversed(movies):
+        print(movie)
+
     return None
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
