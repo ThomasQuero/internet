@@ -1,23 +1,52 @@
+"""IMDb Top250 scraper - extraction de titres.
+
+Ce module fournit un parseur HTML minimal et une fonction utilitaire pour
+extraire les titres de films depuis la page "IMDb Top 250".
+"""
+
 import urllib.request
 from html.parser import HTMLParser
+from typing import List
 
 
 class IMDBParser(HTMLParser):
+    """Parser HTML minimaliste pour extraire les titres de films.
 
-    def __init__(self):
+    Ce parseur considère que les titres de film apparaissent dans des balises
+    <h3> (structure ciblée pour la page IMDb utilisée dans l'exercice).
+
+    Attributs:
+        films: liste des titres extraits (list[str]).
+        dans_titre: bool indiquant si le parser est actuellement à l'intérieur
+            d'une balise <h3>.
+    """
+
+    def __init__(self) -> None:
         super().__init__()
-        self.films = []
-        self.dans_titre = False
+        self.films: List[str] = []
+        self.dans_titre: bool = False
 
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str, attrs) -> None:
+        """Signale l'entrée dans une balise.
+
+        On active le flag `dans_titre` lorsque la balise est un <h3>.
+        """
         if tag == "h3":
             self.dans_titre = True
 
-    def handle_endtag(self, tag):
+    def handle_endtag(self, tag: str) -> None:
+        """Signale la sortie d'une balise.
+
+        On désactive `dans_titre` à la fermeture d'une balise </h3>.
+        """
         if tag == "h3":
             self.dans_titre = False
 
-    def handle_data(self, data):
+    def handle_data(self, data: str) -> None:
+        """Capture et enregistre le texte lorsqu'on est dans une balise de titre.
+
+        Le texte est nettoyé (strip) et ajouté à la liste si non vide.
+        """
         if self.dans_titre:
             titre = data.strip()
 
@@ -25,7 +54,7 @@ class IMDBParser(HTMLParser):
                 self.films.append(titre)
 
 
-def scrap_imdb(html_data):
+def scrap_imdb(html_data: str) -> List[str]:
     """
     Extrait la liste de film contenue dans html_data.
 
